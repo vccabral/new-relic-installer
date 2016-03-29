@@ -27,26 +27,16 @@
        extra_args='--install-option="--install-scripts=/usr/bin"'
   sudo: yes
 
-- name: use newrelic-admin to generate ini
-  command: newrelic-admin generate-config {{newrelic_license_key}} {{newrelic_ini_file}}
+- name: genetate newrelic.ini file
   sudo: yes
-
-# lineinfile only replaces the last matching lines; use replace for multiple app_name replaces
-- name: modify python newrelic.ini app name
-  replace: dest={{newrelic_ini_file}} regexp='.*app_name =.*\n' replace="app_name = {{application_name}}\n"
-  sudo: yes
-
-- name: modify python newrelic.ini high security on
-  lineinfile: dest={{newrelic_ini_file}} state=present regexp="high_security =" line="high_security = true"
-  sudo: yes
-
-- name: modify python newrelic.ini logfile
-  lineinfile: dest={{newrelic_ini_file}} state=present regexp="log_file =" line="log_file = {{newrelic_agentlog_file}}"
-  sudo: yes
-
-- name: modify python newrelic.ini whitelist
-  lineinfile: dest={{newrelic_ini_file}} insertafter="license_key =" state=present regexp="strip_exception_messages\.whitelist =" line="strip_exception_messages.whitelist = KeyError TypeError"
-  sudo: yes
+  template:
+    src: /templates/newrelic.ini.j2
+    dest: {{ newrelic_ini_file }}
+    owner: root
+    group: root
+    mode: 0644
+  notify:
+    - restart apache    
 
 - name: make empty log file with right permissions 
   file:
@@ -60,12 +50,12 @@
 - name: add agent config to the wsgi file
   lineinfile: dest={{wsgi_scriptfile}} state=present line="newrelic.agent.initialize('{{newrelic_ini_file}}')" insertbefore=BOF
   sudo: yes
+  notify:
+    - restart apache    
 
 - name: import newrelic to wsgi
   lineinfile: dest={{wsgi_scriptfile}} state=present line="import newrelic.agent" insertbefore=BOF
   sudo: yes
+  notify:
+    - restart apache    
 
-- name: restart apache server
-  service: name=httpd state=restarted sleep=1
-  sudo: yes
-  ignore_errors: yes

@@ -6,3 +6,4 @@ newrelic_ini_file: "{{newrelic_ini_path}}/newrelic.ini"
 newrelic_agentlog_file: "{{newrelic_agentlog_path}}/newrelic-python-agent.log"
 application_name: "test LAMP wsgi python application"
 newrelic_high_security: true
+whitelist_exceptions: "KeyError TypeError" # search how to configure this here: https://docs.newrelic.com/docs/agents/python-agent/installation-configuration/python-agent-configuration
